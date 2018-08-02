@@ -15,25 +15,39 @@ public class PlayerController : MonoBehaviour
 	public float fireRate = 0.5f;
 	public float speed;
 	public float tilt;
+    public float accelationThreshold;
 	public Boundary boundary;
 	public GameObject shot;
-	public Transform shotSpawn;
+    public Transform shotSpawn;
+
 	void Update() 
 	{
 		// if(Input.GetButton("Fire1") && Time.time > nextFire)
-		if(Input.GetKey(KeyCode.Space) && Time.time > nextFire)
+		if((Input.GetKey(KeyCode.Space) || Input.GetMouseButton(0)) && Time.time > nextFire)
 		{
 			nextFire = Time.time + fireRate;
 			Instantiate(shot, shotSpawn.position, shotSpawn.rotation);
+            GetComponent<AudioSource>().Play();
 		}
 	}
 	void FixedUpdate()
 	{
-		float moveHorizontal = Input.GetAxis("Horizontal");
-		float moveVertical = Input.GetAxis("Vertical");
-		
-		// 플레이어 이동
-		Vector3 movement = new Vector3(moveHorizontal, 0.0f, moveVertical);
+        float moveHorizontal = 0.0f;
+        float moveVertical = 0.0f;
+        if(SystemInfo.supportsAccelerometer)
+        {
+            moveHorizontal = Input.acceleration.x >= accelationThreshold ? 1 :
+                             Input.acceleration.x <= -accelationThreshold ? -1 : 0;
+            moveVertical = Input.acceleration.y >= accelationThreshold ? 1 :
+                             Input.acceleration.y <= -accelationThreshold ? -1 : 0;
+        }
+        else
+        {
+		    moveHorizontal = Input.GetAxis("Horizontal");
+            moveVertical = Input.GetAxis("Vertical");
+        }
+        // 플레이어 이동
+        Vector3 movement = new Vector3(moveHorizontal, 0.0f, moveVertical);
 		GetComponent<Rigidbody>().velocity = movement*speed;
 
 		// 플레이어의 이동범위 설정
